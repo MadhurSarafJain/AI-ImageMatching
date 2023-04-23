@@ -161,6 +161,46 @@ print("Mutation Evolved is: ", Gen_2)
 fitness_2=FitnessEvaluation(image_array_1,image_array_2,Gen_2)
 print("Fitness of mutated random is", fitness_2)
 
+def simulatedAnnealing(image_array_1, image_array_2, pop, T=1.0, alpha=0.95, stopping_T=1e-4, stopping_iter=1000):
+
+    # Evaluate the fitness of the initial population
+    fitness = FitnessEvaluation(image_array_1, image_array_2, pop)
+    best_fitness = max(fitness)
+    best_solution = pop[fitness.index(best_fitness)]
+
+    # Initialize the temperature and the iteration counter
+    iteration = 0
+
+    while T > stopping_T and iteration < stopping_iter:
+
+        # Select a random individual from the population
+        idx = np.random.randint(len(pop))
+        current_solution = pop[idx]
+        current_fitness = fitness[idx]
+
+        # Generate a new candidate solution by randomly perturbing the current solution
+        candidate = (np.random.randint(current_solution[0]-10, current_solution[0]+10), 
+                     np.random.randint(current_solution[1]-10, current_solution[1]+10))
+
+        # Evaluate the fitness of the candidate solution
+        candidate_fitness = FitnessEvaluation(image_array_1, image_array_2, [candidate])[0]
+
+        # Compute the change in fitness and decide whether to accept or reject the candidate solution
+        delta_fitness = candidate_fitness - current_fitness
+        if delta_fitness > 0 or np.exp(delta_fitness / T) > np.random.rand():
+            pop[idx] = candidate
+            fitness[idx] = candidate_fitness
+
+            if candidate_fitness > best_fitness:
+                best_fitness = candidate_fitness
+                best_solution = candidate
+
+        # Update the temperature and the iteration counter
+        T *= alpha
+        iteration += 1
+
+    return best_solution, best_fitness
+
 temp = True
 mean=[]
 max=[]
@@ -169,7 +209,7 @@ for i in range(5000):
 
         if (fitness_2[j]>0.85):
 
-            print("Raju recognized at" , i,"th" , "generation")
+            print("Person recognized at" , i,"th" , "generation")
             temp = j
 
             # Stopping Criteria
