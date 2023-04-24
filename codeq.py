@@ -161,6 +161,43 @@ print("Mutation Evolved is: ", Gen_2)
 fitness_2=FitnessEvaluation(image_array_1,image_array_2,Gen_2)
 print("Fitness of mutated random is", fitness_2)
 
+def hillClimbing(image_array_1, image_array_2, pop, stopping_iter=1000):
+    # Evaluate the fitness of the initial population
+    fitness = FitnessEvaluation(image_array_1, image_array_2, pop)
+    best_fitness = max(fitness)
+    best_solution = pop[fitness.index(best_fitness)]
+    
+    # Initialize the iteration counter
+    iteration = 0
+    
+    while iteration < stopping_iter:
+        # Select a random individual from the population
+        idx = np.random.randint(len(pop))
+        current_solution = pop[idx]
+        current_fitness = fitness[idx]
+        
+        # Generate a new candidate solution by randomly perturbing the current solution
+        candidate = (np.random.randint(current_solution[0]-10, current_solution[0]+10), 
+                     np.random.randint(current_solution[1]-10, current_solution[1]+10))
+        
+        # Evaluate the fitness of the candidate solution
+        candidate_fitness = FitnessEvaluation(image_array_1, image_array_2, [candidate])[0]
+        
+        # Check if the candidate solution is better than the current solution
+        if candidate_fitness > current_fitness:
+            pop[idx] = candidate
+            fitness[idx] = candidate_fitness
+            
+            if candidate_fitness > best_fitness:
+                best_fitness = candidate_fitness
+                best_solution = candidate
+                
+        # Update the iteration counter
+        iteration += 1
+    
+    return best_solution, best_fitness
+
+
 def simulatedAnnealing(image_array_1, image_array_2, pop, T=1.0, alpha=0.95, stopping_T=1e-4, stopping_iter=1000):
 
     # Evaluate the fitness of the initial population
