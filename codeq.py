@@ -294,6 +294,55 @@ def antColonyOptimization(image_array_1, image_array_2, n_ants=10, alpha=1, beta
 
     return best_solution, best_fitness
 
+def particleSwarmOptimization(image_array_1, image_array_2, swarm_size=10, c1=2, c2=2, max_iter=1000):
+
+    # Define the problem bounds
+    x_min = 0
+    x_max = image_array_1.shape[1] - 1
+    y_min = 0
+    y_max = image_array_1.shape[0] - 1
+
+    # Initialize the swarm with random positions and velocities
+    swarm = np.random.uniform(low=(x_min, y_min), high=(x_max, y_max), size=(swarm_size, 2))
+    velocities = np.zeros((swarm_size, 2))
+
+    # Initialize the best positions and fitness values for each particle
+    best_positions = swarm.copy()
+    fitness = FitnessEvaluation(image_array_1, image_array_2, swarm)
+    best_fitness = fitness.copy()
+
+    # Initialize the best position and fitness value for the entire swarm
+    global_best_fitness = np.max(fitness)
+    global_best_position = swarm[np.argmax(fitness)]
+
+    # Run the algorithm for a fixed number of iterations
+    for iteration in range(max_iter):
+
+        # Update the velocities and positions of the particles
+        r1 = np.random.rand(swarm_size, 1)
+        r2 = np.random.rand(swarm_size, 1)
+        velocities = velocities + c1 * r1 * (best_positions - swarm) + c2 * r2 * (global_best_position - swarm)
+        swarm = swarm + velocities
+
+        # Enforce the problem bounds
+        swarm[:, 0] = np.clip(swarm[:, 0], x_min, x_max)
+        swarm[:, 1] = np.clip(swarm[:, 1], y_min, y_max)
+
+        # Evaluate the fitness of the new positions
+        fitness = FitnessEvaluation(image_array_1, image_array_2, swarm)
+
+        # Update the best positions and fitness values for each particle
+        mask = fitness > best_fitness
+        best_positions[mask, :] = swarm[mask, :]
+        best_fitness[mask] = fitness[mask]
+
+        # Update the best position and fitness value for the entire swarm
+        if np.max(fitness) > global_best_fitness:
+            global_best_fitness = np.max(fitness)
+            global_best_position = swarm[np.argmax(fitness)]
+
+    return global_best_position, global_best_fitness
+
 
 temp = True
 mean=[]
