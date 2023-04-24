@@ -238,6 +238,63 @@ def simulatedAnnealing(image_array_1, image_array_2, pop, T=1.0, alpha=0.95, sto
 
     return best_solution, best_fitness
 
+import numpy as np
+
+def antColonyOptimization(image_array_1, image_array_2, n_ants=10, alpha=1, beta=1, evap_rate=0.1, Q=1.0, max_iter=1000):
+
+    # Define the pheromone matrix
+    n = image_array_1.shape[0] * image_array_1.shape[1]
+    pheromone = np.ones((n, n)) / n
+
+    # Define the initial solution
+    best_solution = None
+    best_fitness = -1
+
+    # Run the algorithm for a fixed number of iterations
+    for iteration in range(max_iter):
+
+        # Initialize the ants' solutions and fitness values
+        solutions = []
+        fitness = []
+        for ant in range(n_ants):
+
+            # Choose a random starting position
+            position = np.random.randint(n)
+
+            # Construct a solution by iteratively choosing the next position using the pheromone matrix and heuristic information
+            visited = [position]
+            for step in range(n-1):
+                probabilities = pheromone[position,:] ** alpha * (1.0 / FitnessEvaluation(image_array_1, image_array_2, [position // image_array_1.shape[1], position % image_array_1.shape[1]], [i // image_array_1.shape[1], i % image_array_1.shape[1]]) ** beta)
+                probabilities[visited] = 0
+                probabilities /= probabilities.sum()
+                next_position = np.random.choice(n, p=probabilities)
+                visited.append(next_position)
+                position = next_position
+
+            # Evaluate the fitness of the solution
+            solution = [(i // image_array_1.shape[1], i % image_array_1.shape[1]) for i in visited]
+            fitness_value = FitnessEvaluation(image_array_1, image_array_2, solution)[0]
+
+            # Update the best solution found so far
+            if fitness_value > best_fitness:
+                best_fitness = fitness_value
+                best_solution = solution
+
+            # Add the solution and fitness value to the list of solutions and fitness values
+            solutions.append(solution)
+            fitness.append(fitness_value)
+
+        # Update the pheromone matrix using the solutions found by the ants
+        pheromone *= (1.0 - evap_rate)
+        for i in range(n_ants):
+            for j in range(n-1):
+                pos1 = solutions[i][j]
+                pos2 = solutions[i][j+1]
+                pheromone[pos1[0]*image_array_1.shape[1]+pos1[1], pos2[0]*image_array_1.shape[1]+pos2[1]] += Q / fitness[i]
+
+    return best_solution, best_fitness
+
+
 temp = True
 mean=[]
 max=[]
